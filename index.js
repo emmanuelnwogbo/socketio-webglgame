@@ -1,17 +1,26 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
+const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-const hostname = '127.0.0.1';
-const port = 3000;
-
-const server = http.createServer((req, res) => {
-  fs.readFile('index.html', function(err, data) {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.write(data);
-        res.end();
-    });
+app.use(express.static('./public_html/chat/index.html'));
+app.get('/',function(req, res) {
+    res.sendFile(__dirname + '/./public_html/chat/index.html');
 });
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+const Port = 3000;
+
+io.on('connection', function(socket) {
+  console.log('a user connected');
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+  });
+  socket.on('chat message', function(msg){
+    io.emit('chat message', msg);
+    console.log(msg)
+  });
+});
+
+http.listen(Port, function(){
+  console.log(`listening on ${Port}`);
 });
